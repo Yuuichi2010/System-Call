@@ -296,6 +296,9 @@ fork(void)
   }
   np->sz = p->sz;
 
+  //thêm dòng này để copy tracemask từ cha -> con
+  np -> tracemask = p -> tracemask;
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
