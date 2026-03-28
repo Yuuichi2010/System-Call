@@ -45,7 +45,7 @@ testmem() {
   
   sinfo(&info);
 
-  if (info.freemem!= n) {
+  if (info.freemem != n) {
     printf("FAIL: free mem %ld (bytes) instead of %ld\n", info.freemem, n);
     exit(1);
   }
@@ -141,6 +141,41 @@ void testbad() {
   }
 }
 
+// Test nopenfiles: open() should increase nopenfiles by 1,
+// close() should decrease it back to the original value.
+void
+testopenfiles() {
+  struct sysinfo info1, info2;
+  int fd;
+
+  sinfo(&info1);
+
+  // open one file → nopenfiles must increase by exactly 1
+  fd = open("README", 0);
+  if(fd < 0){
+    printf("sysinfotest: testopenfiles: open failed\n");
+    exit(1);
+  }
+
+  sinfo(&info2);
+  if(info2.nopenfiles != info1.nopenfiles + 1){
+    printf("sysinfotest: FAIL nopenfiles is %ld instead of %ld\n",
+           info2.nopenfiles, info1.nopenfiles + 1);
+    close(fd);
+    exit(1);
+  }
+
+  // close the file → nopenfiles must return to original value
+  close(fd);
+
+  sinfo(&info2);
+  if(info2.nopenfiles != info1.nopenfiles){
+    printf("sysinfotest: FAIL nopenfiles after close is %ld instead of %ld\n",
+           info2.nopenfiles, info1.nopenfiles);
+    exit(1);
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -148,6 +183,7 @@ main(int argc, char *argv[])
   testcall();
   testmem();
   testproc();
+  testopenfiles();  // added: test nopenfiles field
   printf("sysinfotest: OK\n");
   exit(0);
 }
